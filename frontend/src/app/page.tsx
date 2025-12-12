@@ -145,13 +145,14 @@ export default function Home() {
                   setStreamedContent(fullContent);
                   break;
                 case "article":
-                  setArticle({
+                  const articleData = {
                     articleId: data.articleId,
                     title: data.title,
                     content: data.content,
                     sources: data.sources || [],
                     cached: data.cached,
-                  });
+                  };
+                  setArticle(articleData);
                   setIsCached(data.cached || false);
                   if (data.cached) setStreamedContent(data.content);
                   break;
