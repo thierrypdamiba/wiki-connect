@@ -60,6 +60,8 @@ export default function Home() {
   const [isCached, setIsCached] = useState(false);
   const [showDecisions, setShowDecisions] = useState(true);
   const stepsRef = useRef<HTMLDivElement>(null);
+  const articleReceivedRef = useRef(false);
+  const articleReceivedTimeRef = useRef(0);
 
   useEffect(() => {
     if (stepsRef.current) {
@@ -86,6 +88,7 @@ export default function Home() {
   };
 
   const handleConnect = async () => {
+    console.log("handleConnect called with:", topicA, topicB);
     if (!topicA || !topicB) return;
 
     setIsGenerating(true);
@@ -95,18 +98,22 @@ export default function Home() {
     setAgentDecisions([]);
     setStreamedContent("");
     setIsCached(false);
+    articleReceivedRef.current = false;
 
     try {
+      console.log("Fetching stream...");
       const response = await fetch("/api/connect/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topicA, topicB }),
       });
 
+      console.log("Response status:", response.status);
       if (!response.ok) throw new Error("Failed to connect");
 
       const reader = response.body?.getReader();
       if (!reader) throw new Error("No reader");
+      console.log("Got reader, starting to read...");
 
       const decoder = new TextDecoder();
       let buffer = "";
@@ -145,6 +152,9 @@ export default function Home() {
                   setStreamedContent(fullContent);
                   break;
                 case "article":
+                  console.log("Setting article:", data.title);
+                  articleReceivedRef.current = true;
+                  articleReceivedTimeRef.current = Date.now();
                   const articleData = {
                     articleId: data.articleId,
                     title: data.title,
@@ -178,6 +188,7 @@ export default function Home() {
       console.error("Streaming error:", error);
       updateStep("error", "error", "Failed to generate article", "Check console for details");
     } finally {
+      console.log("Finally block - isGenerating=false, articleReceivedRef=", articleReceivedRef.current);
       setIsGenerating(false);
     }
   };
@@ -207,12 +218,26 @@ export default function Home() {
   };
 
   const reset = () => {
+    // Don't allow reset during generation
+    if (isGenerating) {
+      console.log("RESET blocked - still generating");
+      return;
+    }
+    // Don't allow reset within 2 seconds of article being received (prevents race conditions)
+    const timeSinceArticle = Date.now() - articleReceivedTimeRef.current;
+    if (articleReceivedRef.current && timeSinceArticle < 2000) {
+      console.log("RESET blocked - article just received", timeSinceArticle, "ms ago");
+      return;
+    }
+    console.log("RESET executed");
     setArticle(null);
     setImages({});
     setAgentSteps([]);
     setAgentDecisions([]);
     setStreamedContent("");
     setIsCached(false);
+    articleReceivedRef.current = false;
+    articleReceivedTimeRef.current = 0;
   };
 
   return (
@@ -221,7 +246,12 @@ export default function Home() {
       <header className="border-b border-[#090E1A]/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <button
-            onClick={reset}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              reset();
+            }}
             className="text-lg font-semibold tracking-tight hover:text-[#DC244C] transition"
           >
             Wiki Connect
