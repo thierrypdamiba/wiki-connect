@@ -1,0 +1,7 @@
+cohere>=5.20.0
+fastapi>=0.118.3
+google-genai>=1.0.0
+linkup-sdk>=0.9.0
+python-dotenv>=1.0.0
+qdrant-client>=1.12.0
+uvicorn>=0.38.0

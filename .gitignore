@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.local
+
+# Node
+node_modules/
+.next/
+.vercel/
+
+# Generated
+generated_images/
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Demo/experimental files (not part of main app)
+agent.py
+demo.py
+*_demo.py
+test_*.py
+create_*.py
+load_*.py
+memory.py
+memory_tools.py
+*_cohere.py
+wiki_connect_agent.py
+semantic_memory_demo/
+
+# Claude
+.claude/
