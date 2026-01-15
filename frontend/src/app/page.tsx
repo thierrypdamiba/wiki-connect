@@ -60,6 +60,8 @@ export default function Home() {
   const [isCached, setIsCached] = useState(false);
   const [showDecisions, setShowDecisions] = useState(true);
   const [debugError, setDebugError] = useState<string | null>(null);
+  const [eventCount, setEventCount] = useState(0);
+  const [lastEventType, setLastEventType] = useState<string>("");
   const stepsRef = useRef<HTMLDivElement>(null);
   const articleReceivedRef = useRef(false);
   const articleReceivedTimeRef = useRef(0);
@@ -100,6 +102,8 @@ export default function Home() {
     setStreamedContent("");
     setIsCached(false);
     setDebugError(null);
+    setEventCount(0);
+    setLastEventType("");
     articleReceivedRef.current = false;
 
     try {
@@ -132,7 +136,12 @@ export default function Home() {
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             try {
-              const data = JSON.parse(line.slice(6));
+              const jsonStr = line.slice(6);
+              console.log("SSE line:", jsonStr.slice(0, 100));
+              const data = JSON.parse(jsonStr);
+              console.log("Parsed event type:", data.type);
+              setEventCount(c => c + 1);
+              setLastEventType(data.type);
 
               switch (data.type) {
                 case "decision":
@@ -309,6 +318,7 @@ export default function Home() {
         {debugError && (
           <div className="my-4 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-700 font-medium">Debug: {debugError}</p>
+            <p className="text-red-600 text-sm mt-1">Events received: {eventCount} | Last event: {lastEventType || "none"}</p>
             <button
               onClick={() => setDebugError(null)}
               className="mt-2 text-sm text-red-500 underline"
