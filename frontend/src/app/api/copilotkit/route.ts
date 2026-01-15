@@ -6,7 +6,7 @@ import {
 import { NextRequest } from "next/server";
 
 // Backend URL for the ADK agent
-const ADK_BACKEND_URL = process.env.ADK_BACKEND_URL || "http://localhost:8000";
+const ADK_BACKEND_URL = process.env.ADK_BACKEND_URL || "http://localhost:9843";
 
 const runtime = new CopilotRuntime({
   actions: [

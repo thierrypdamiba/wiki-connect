@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const ADK_BACKEND_URL = process.env.ADK_BACKEND_URL || "http://localhost:8000";
+import { buildImagePrompt } from "@/lib/gemini";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,25 +12,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Call ADK backend
-    const response = await fetch(`${ADK_BACKEND_URL}/generate-image`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        topic_a: topicA,
-        topic_b: topicB,
-        connection_summary: connectionSummary || `Connection between ${topicA} and ${topicB}`,
-      }),
+    // For now, return null - image generation requires special Gemini models
+    // that may not be available in all regions/accounts
+    // The frontend handles this gracefully
+    return NextResponse.json({
+      imageId: null,
+      imageUrl: null,
+      prompt: buildImagePrompt(topicA, topicB, connectionSummary || `Connection between ${topicA} and ${topicB}`),
+      message: "Image generation not available in serverless mode",
     });
-
-    const data = await response.json();
-
-    // Convert relative URL to absolute
-    if (data.imageUrl) {
-      data.imageUrl = `${ADK_BACKEND_URL}${data.imageUrl}`;
-    }
-
-    return NextResponse.json(data);
   } catch (error) {
     console.error("Error generating image:", error);
     return NextResponse.json(

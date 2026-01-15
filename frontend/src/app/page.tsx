@@ -306,16 +306,16 @@ export default function Home() {
             </h1>
             <p className="text-[#090E1A]/50 text-lg mb-8 leading-relaxed">
               Semantic search across <span className="text-[#090E1A] font-medium">35 million Wikipedia articles</span> powered by{" "}
-              <span className="inline-flex items-center gap-1">
-                <svg viewBox="0 0 173 200" className="w-4 h-5 inline">
+              <span className="inline-flex items-baseline gap-1">
+                <svg viewBox="0 0 173 200" className="w-3.5 h-4 inline self-center">
                   <polygon fill="#DC244C" points="86.6 0 0 50 0 150 86.6 200 119.08 181.25 119.08 143.75 86.6 162.5 32.48 131.25 32.48 68.75 86.6 37.5 140.73 68.75 140.73 193.75 173.21 175 173.21 50 86.6 0"/>
                   <polygon fill="#DC244C" points="54.13 81.25 54.13 118.75 86.6 137.5 119.08 118.75 119.08 81.25 86.6 62.5 54.13 81.25"/>
                 </svg>
                 <span className="text-[#DC244C] font-semibold">Qdrant</span>
               </span>{" "}
               with real-time web grounding from{" "}
-              <span className="inline-flex items-center gap-1">
-                <svg viewBox="0 0 24 24" className="w-4 h-4 inline" fill="none" stroke="#038585" strokeWidth="2.5">
+              <span className="inline-flex items-baseline gap-1">
+                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 inline self-center" fill="none" stroke="#038585" strokeWidth="2.5">
                   <circle cx="12" cy="12" r="9" />
                   <path d="M2 12h20" />
                   <path d="M12 2c2.5 2.5 4 6 4 10s-1.5 7.5-4 10" />
@@ -409,177 +409,9 @@ export default function Home() {
 
         {/* Main content */}
         {(isGenerating || article) && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 py-8">
-            {/* Agent Process */}
-            <div className="lg:col-span-4 lg:order-2">
-              <div className="sticky top-6">
-                {/* Toggle for Decisions vs Steps view */}
-                <div className="flex items-center gap-2 mb-4">
-                  {isGenerating && (
-                    <span className="w-2 h-2 rounded-full bg-[#DC244C] animate-pulse" />
-                  )}
-                  <h3 className="text-xs font-medium text-[#090E1A]/40 uppercase tracking-wide">
-                    Agent Process
-                  </h3>
-                  <div className="ml-auto flex items-center gap-1">
-                    {isCached && (
-                      <span className="text-xs text-[#038585] font-medium mr-2">Cached</span>
-                    )}
-                    <button
-                      onClick={() => setShowDecisions(true)}
-                      className={`px-2 py-1 text-xs rounded ${showDecisions ? 'bg-[#DC244C] text-white' : 'text-[#090E1A]/40 hover:text-[#090E1A]/60'}`}
-                    >
-                      Decisions
-                    </button>
-                    <button
-                      onClick={() => setShowDecisions(false)}
-                      className={`px-2 py-1 text-xs rounded ${!showDecisions ? 'bg-[#DC244C] text-white' : 'text-[#090E1A]/40 hover:text-[#090E1A]/60'}`}
-                    >
-                      Steps
-                    </button>
-                  </div>
-                </div>
-
-                {/* Agent Decisions Panel */}
-                {showDecisions && agentDecisions.length > 0 && (
-                  <div className="mb-4 space-y-2">
-                    {agentDecisions.map((d) => (
-                      <div
-                        key={d.id}
-                        className="p-3 rounded-lg border border-[#DC244C]/20 bg-[#DC244C]/[0.02]"
-                      >
-                        <div className="flex items-start gap-2">
-                          <span className="text-sm">🧠</span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-[#DC244C]">{d.decision}</p>
-                            <p className="text-xs text-[#090E1A]/70 mt-1">{d.reasoning}</p>
-                            <div className="mt-2 p-2 bg-[#090E1A]/[0.03] rounded text-xs">
-                              <span className="text-[#090E1A]/50">Action: </span>
-                              <span className="text-[#090E1A]/80">{d.action}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Agent Steps Panel */}
-                <div ref={stepsRef} className={`space-y-2 max-h-[70vh] overflow-y-auto pr-2 ${showDecisions && agentDecisions.length > 0 ? 'max-h-[40vh]' : ''}`}>
-                  {agentSteps.map((step) => {
-                    const stepInfo = STEP_LABELS[step.step] || { label: step.step, icon: "•" };
-                    const hasDetails = step.detail || (step.results && step.results.length > 0);
-                    const isSearchStep = step.step.startsWith("search_") || step.step === "connections";
-
-                    return (
-                      <div
-                        key={step.id}
-                        className={`rounded-lg border transition-all overflow-hidden ${
-                          step.status === "running"
-                            ? "border-[#DC244C]/30 bg-[#DC244C]/[0.02]"
-                            : step.status === "error"
-                            ? "border-red-200 bg-red-50"
-                            : "border-[#090E1A]/5 bg-[#090E1A]/[0.01]"
-                        }`}
-                      >
-                        {/* Header - Always visible */}
-                        <button
-                          onClick={() => hasDetails && toggleStepExpanded(step.id)}
-                          className={`w-full p-3 flex items-center gap-2 text-left ${hasDetails ? "cursor-pointer hover:bg-[#090E1A]/[0.02]" : ""}`}
-                          disabled={!hasDetails}
-                        >
-                          {/* Status indicator */}
-                          {step.status === "running" ? (
-                            <div className="w-4 h-4 flex-shrink-0 rounded-full border-2 border-[#DC244C] border-t-transparent animate-spin" />
-                          ) : step.status === "error" ? (
-                            <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center text-red-500 text-xs font-bold">✕</span>
-                          ) : (
-                            <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center text-[#038585] text-xs">✓</span>
-                          )}
-
-                          {/* Step icon */}
-                          <span className="text-sm flex-shrink-0">{stepInfo.icon}</span>
-
-                          {/* Message */}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-[#090E1A] truncate">{step.message}</p>
-                          </div>
-
-                          {/* Expand indicator */}
-                          {hasDetails && (
-                            <svg
-                              className={`w-4 h-4 text-[#090E1A]/30 transition-transform flex-shrink-0 ${step.expanded ? "rotate-180" : ""}`}
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          )}
-                        </button>
-
-                        {/* Expanded content */}
-                        {step.expanded && hasDetails && (
-                          <div className="px-3 pb-3 border-t border-[#090E1A]/5">
-                            {step.detail && (
-                              <p className="text-xs text-[#090E1A]/60 mt-2 font-mono">{step.detail}</p>
-                            )}
-
-                            {step.results && step.results.length > 0 && (
-                              <div className="mt-3 space-y-2">
-                                <p className="text-xs font-medium text-[#090E1A]/40 uppercase tracking-wide">
-                                  {isSearchStep ? "Retrieved Documents" : "Results"}
-                                </p>
-                                {step.results.map((r, i) => (
-                                  <div
-                                    key={i}
-                                    className="p-2 bg-white border border-[#090E1A]/5 rounded text-xs"
-                                  >
-                                    {r.startsWith("http") ? (
-                                      <a
-                                        href={r}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-[#DC244C] hover:underline break-all"
-                                      >
-                                        {r}
-                                      </a>
-                                    ) : r.includes(":") && isSearchStep ? (
-                                      <div>
-                                        <span className="font-medium text-[#090E1A]">
-                                          {r.split(":")[0]}
-                                        </span>
-                                        <span className="text-[#090E1A]/60">
-                                          :{r.split(":").slice(1).join(":")}
-                                        </span>
-                                      </div>
-                                    ) : (
-                                      <span className="text-[#090E1A]/70">{r}</span>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Preview of results (when collapsed) */}
-                        {!step.expanded && step.results && step.results.length > 0 && step.status === "done" && (
-                          <div className="px-3 pb-2 -mt-1">
-                            <p className="text-xs text-[#090E1A]/40 truncate">
-                              {isSearchStep ? `${step.results.length} results` : step.results[0]}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
+          <div className="flex gap-0 py-8">
             {/* Article */}
-            <div className="lg:col-span-8 lg:order-1">
+            <div className="flex-1 pr-8 lg:pr-12">
               {/* Banner */}
               {images.bannerUrl && (
                 <div className="mb-6 rounded-lg overflow-hidden">
@@ -689,6 +521,195 @@ export default function Home() {
                 </div>
               )}
             </div>
+
+            {/* Divider */}
+            <div className="hidden lg:block w-px bg-gradient-to-b from-transparent via-[#090E1A]/10 to-transparent" />
+
+            {/* Agent Panel - Dark themed sidebar */}
+            <div className="hidden lg:block w-80 xl:w-96 flex-shrink-0 pl-8">
+              <div className="sticky top-6">
+                <div className="bg-[#0d1117] rounded-xl border border-[#30363d] overflow-hidden shadow-xl">
+                  {/* Panel Header */}
+                  <div className="px-4 py-3 border-b border-[#30363d] bg-[#161b22]">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {isGenerating && (
+                          <span className="w-2 h-2 rounded-full bg-[#DC244C] animate-pulse" />
+                        )}
+                        <h3 className="text-xs font-medium text-[#8b949e] uppercase tracking-wide">
+                          Agent Process
+                        </h3>
+                        {isCached && (
+                          <span className="px-1.5 py-0.5 text-[10px] bg-[#238636]/20 text-[#3fb950] rounded font-medium">
+                            Cached
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setShowDecisions(true)}
+                          className={`px-2 py-1 text-xs rounded transition ${showDecisions ? 'bg-[#DC244C] text-white' : 'text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d]'}`}
+                        >
+                          Decisions
+                        </button>
+                        <button
+                          onClick={() => setShowDecisions(false)}
+                          className={`px-2 py-1 text-xs rounded transition ${!showDecisions ? 'bg-[#DC244C] text-white' : 'text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d]'}`}
+                        >
+                          Steps
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Panel Content */}
+                  <div ref={stepsRef} className="p-4 max-h-[70vh] overflow-y-auto">
+                    {/* Agent Decisions */}
+                    {showDecisions && agentDecisions.length > 0 && (
+                      <div className="mb-4 space-y-2">
+                        {agentDecisions.map((d) => (
+                          <div
+                            key={d.id}
+                            className="p-3 rounded-lg border border-[#DC244C]/30 bg-[#DC244C]/10"
+                          >
+                            <div className="flex items-start gap-2">
+                              <span className="text-sm">🧠</span>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-[#DC244C]">{d.decision}</p>
+                                <p className="text-xs text-[#8b949e] mt-1">{d.reasoning}</p>
+                                <div className="mt-2 p-2 bg-[#21262d] rounded text-xs">
+                                  <span className="text-[#8b949e]">Action: </span>
+                                  <span className="text-[#c9d1d9]">{d.action}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Agent Steps */}
+                    <div className="space-y-2">
+                      {agentSteps.map((step) => {
+                        const stepInfo = STEP_LABELS[step.step] || { label: step.step, icon: "•" };
+                        const hasDetails = step.detail || (step.results && step.results.length > 0);
+                        const isSearchStep = step.step.startsWith("search_") || step.step === "connections";
+
+                        return (
+                          <div
+                            key={step.id}
+                            className={`rounded-lg border transition-all overflow-hidden ${
+                              step.status === "running"
+                                ? "border-[#DC244C]/40 bg-[#DC244C]/10"
+                                : step.status === "error"
+                                ? "border-[#f85149]/40 bg-[#f85149]/10"
+                                : "border-[#30363d] bg-[#21262d]"
+                            }`}
+                          >
+                            {/* Step Header */}
+                            <button
+                              onClick={() => hasDetails && toggleStepExpanded(step.id)}
+                              className={`w-full p-3 flex items-center gap-2 text-left ${hasDetails ? "cursor-pointer hover:bg-[#30363d]/50" : ""}`}
+                              disabled={!hasDetails}
+                            >
+                              {/* Status indicator */}
+                              {step.status === "running" ? (
+                                <div className="w-4 h-4 flex-shrink-0 rounded-full border-2 border-[#DC244C] border-t-transparent animate-spin" />
+                              ) : step.status === "error" ? (
+                                <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center text-[#f85149] text-xs font-bold">✕</span>
+                              ) : (
+                                <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center text-[#3fb950] text-xs">✓</span>
+                              )}
+
+                              {/* Step icon */}
+                              <span className="text-sm flex-shrink-0">{stepInfo.icon}</span>
+
+                              {/* Message */}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-[#c9d1d9] truncate">{step.message}</p>
+                              </div>
+
+                              {/* Expand indicator */}
+                              {hasDetails && (
+                                <svg
+                                  className={`w-4 h-4 text-[#8b949e] transition-transform flex-shrink-0 ${step.expanded ? "rotate-180" : ""}`}
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              )}
+                            </button>
+
+                            {/* Expanded content */}
+                            {step.expanded && hasDetails && (
+                              <div className="px-3 pb-3 border-t border-[#30363d]">
+                                {step.detail && (
+                                  <p className="text-xs text-[#8b949e] mt-2 font-mono">{step.detail}</p>
+                                )}
+
+                                {step.results && step.results.length > 0 && (
+                                  <div className="mt-3 space-y-2">
+                                    <p className="text-xs font-medium text-[#8b949e] uppercase tracking-wide">
+                                      {isSearchStep ? "Retrieved Documents" : "Results"}
+                                    </p>
+                                    {step.results.map((r, i) => (
+                                      <div
+                                        key={i}
+                                        className="p-2 bg-[#0d1117] border border-[#30363d] rounded text-xs"
+                                      >
+                                        {r.startsWith("http") ? (
+                                          <a
+                                            href={r}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-[#DC244C] hover:underline break-all"
+                                          >
+                                            {r}
+                                          </a>
+                                        ) : r.includes(":") && isSearchStep ? (
+                                          <div>
+                                            <span className="font-medium text-[#c9d1d9]">
+                                              {r.split(":")[0]}
+                                            </span>
+                                            <span className="text-[#8b949e]">
+                                              :{r.split(":").slice(1).join(":")}
+                                            </span>
+                                          </div>
+                                        ) : (
+                                          <span className="text-[#8b949e]">{r}</span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Preview of results (when collapsed) */}
+                            {!step.expanded && step.results && step.results.length > 0 && step.status === "done" && (
+                              <div className="px-3 pb-2 -mt-1">
+                                <p className="text-xs text-[#8b949e] truncate">
+                                  {isSearchStep ? `${step.results.length} results` : step.results[0]}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Empty state */}
+                    {agentSteps.length === 0 && agentDecisions.length === 0 && (
+                      <div className="text-center py-8">
+                        <p className="text-[#8b949e] text-sm">Waiting for agent...</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -714,15 +735,15 @@ export default function Home() {
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center gap-2 text-[#090E1A]/50">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#DC244C]"></span>
-                    <span>Cohere multilingual embeddings</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-[#090E1A]/50">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#DC244C]"></span>
-                    <span>6 collections: WORLD, USER_*, LINKUP_CACHE</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-[#090E1A]/50">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#DC244C]"></span>
                     <span>Sub-second similarity search</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[#090E1A]/50">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#DC244C]"></span>
+                    <span>Advanced filtering & hybrid search</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[#090E1A]/50">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#DC244C]"></span>
+                    <span>Open-source & production-ready</span>
                   </div>
                 </div>
               </div>

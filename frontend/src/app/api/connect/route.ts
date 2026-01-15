@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ADK_BACKEND_URL = process.env.ADK_BACKEND_URL || "http://localhost:8000";
+const ADK_BACKEND_URL = process.env.ADK_BACKEND_URL || "http://localhost:9843";
 
 export async function POST(req: NextRequest) {
   try {
