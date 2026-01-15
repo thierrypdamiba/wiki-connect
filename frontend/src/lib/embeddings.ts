@@ -78,7 +78,7 @@ export function generateBM25Sparse(text: string): { indices: number[]; values: n
   const indices: number[] = [];
   const values: number[] = [];
 
-  for (const [token, freq] of termFreq) {
+  termFreq.forEach((freq, token) => {
     // Simple hash function for token -> index
     let hash = 0;
     for (let i = 0; i < token.length; i++) {
@@ -92,7 +92,7 @@ export function generateBM25Sparse(text: string): { indices: number[]; values: n
 
     indices.push(index);
     values.push(tf);
-  }
+  });
 
   return { indices, values };
 }
