@@ -5,6 +5,7 @@ import {
   storeArticle,
   getUserPreferences,
 } from "@/lib/qdrant";
+import { EMBEDDING_CONFIG } from "@/lib/embeddings";
 import { generateContentStream, buildArticlePrompt } from "@/lib/gemini";
 import { searchAndCache, isAvailable as linkupAvailable, formatForGrounding } from "@/lib/linkup";
 
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
           step: "search_a",
           status: "running",
           message: "Searching Qdrant wikipedia_multimodal collection...",
-          detail: `Query: "${topicA}" | Collection: 35M+ Wikipedia article sections | Using: Cohere embeddings`,
+          detail: `Query: "${topicA}" | Collection: 35M+ Wikipedia article sections | Using: ${EMBEDDING_CONFIG.provider} ${EMBEDDING_CONFIG.model} (${EMBEDDING_CONFIG.dimensions}d MRL)`,
         }));
 
         const resultsA = await searchWorld(topicA, 4);
@@ -361,7 +362,7 @@ export async function POST(req: NextRequest) {
         send(sendDecision(
           "Memory Storage",
           `Article generated successfully (${wordCount} words). Need to persist for future retrieval and caching.`,
-          `Store in USER_ARTICLES collection with: (1) Cohere embedding of title+content for semantic search, (2) topic_a/topic_b fields for exact-match cache lookup, (3) source_page_ids linking back to Wikipedia`
+          `Store in USER_ARTICLES collection with: (1) ${EMBEDDING_CONFIG.provider} embedding (${EMBEDDING_CONFIG.dimensions}d) of title+content for semantic search, (2) topic_a/topic_b fields for exact-match cache lookup, (3) source_page_ids linking back to Wikipedia`
         ));
 
         // Step 9: Store article
@@ -369,7 +370,7 @@ export async function POST(req: NextRequest) {
           step: "store",
           status: "running",
           message: "Storing article in Qdrant user_articles...",
-          detail: `Embedding article with Cohere | User: ${userId}`,
+          detail: `Embedding article with ${EMBEDDING_CONFIG.provider} | User: ${userId}`,
         }));
 
         const sourceUrls = Array.from(new Set([
