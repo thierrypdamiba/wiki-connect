@@ -1,38 +1,39 @@
-import OpenAI from "openai";
+import { CohereClientV2 } from "cohere-ai";
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
+const COHERE_API_KEY = process.env.COHERE_API_KEY!;
 
-// MRL (Matryoshka) configuration - can use 256, 512, 1024, or 3072
-// Lower dimensions = faster search, less storage, minimal quality loss
-const EMBEDDING_MODEL = "text-embedding-3-small";
-const EMBEDDING_DIMENSIONS = 256; // MRL: 3x smaller than default 1536
+// Cohere embed-multilingual-v2.0 - matches existing wikipedia_multimodal collection
+const EMBEDDING_MODEL = "embed-multilingual-v2.0";
+const EMBEDDING_DIMENSIONS = 768;
 
-let _client: OpenAI | null = null;
+let _client: CohereClientV2 | null = null;
 
-function getClient(): OpenAI {
+function getClient(): CohereClientV2 {
   if (!_client) {
-    _client = new OpenAI({ apiKey: OPENAI_API_KEY });
+    _client = new CohereClientV2({ token: COHERE_API_KEY });
   }
   return _client;
 }
 
 /**
- * Generate dense embedding using OpenAI text-embedding-3 with MRL
+ * Generate dense embedding using Cohere (matches existing 35M collection)
  */
 export async function embed(text: string): Promise<number[]> {
   const client = getClient();
 
-  const response = await client.embeddings.create({
+  const response = await client.embed({
     model: EMBEDDING_MODEL,
-    input: text,
-    dimensions: EMBEDDING_DIMENSIONS,
+    texts: [text],
+    inputType: "search_query",
+    embeddingTypes: ["float"],
   });
 
-  if (response.data && response.data.length > 0) {
-    return response.data[0].embedding;
+  const embeddings = response.embeddings;
+  if (embeddings && "float" in embeddings && embeddings.float && embeddings.float.length > 0) {
+    return embeddings.float[0];
   }
 
-  throw new Error("Failed to get embedding from OpenAI");
+  throw new Error("Failed to get embedding from Cohere");
 }
 
 /**
@@ -41,55 +42,47 @@ export async function embed(text: string): Promise<number[]> {
 export async function embedBatch(texts: string[]): Promise<number[][]> {
   const client = getClient();
 
-  const response = await client.embeddings.create({
+  const response = await client.embed({
     model: EMBEDDING_MODEL,
-    input: texts,
-    dimensions: EMBEDDING_DIMENSIONS,
+    texts,
+    inputType: "search_document",
+    embeddingTypes: ["float"],
   });
 
-  if (response.data && response.data.length > 0) {
-    return response.data.map((d) => d.embedding);
+  const embeddings = response.embeddings;
+  if (embeddings && "float" in embeddings && embeddings.float) {
+    return embeddings.float;
   }
 
-  throw new Error("Failed to get embeddings from OpenAI");
+  throw new Error("Failed to get embeddings from Cohere");
 }
 
 /**
  * Generate BM25 sparse vector from text
- * Uses simple tokenization for Qdrant's sparse vector format
- * Note: Qdrant Cloud can also do this automatically with FastEmbed
+ * For future hybrid search with new collections
  */
 export function generateBM25Sparse(text: string): { indices: number[]; values: number[] } {
-  // Simple BM25-style tokenization
   const tokens = text
     .toLowerCase()
     .replace(/[^\w\s]/g, " ")
     .split(/\s+/)
     .filter((t) => t.length > 2);
 
-  // Count term frequencies
   const termFreq = new Map<string, number>();
   for (const token of tokens) {
     termFreq.set(token, (termFreq.get(token) || 0) + 1);
   }
 
-  // Convert to sparse vector format
-  // Use hash of token as index (simple approach)
   const indices: number[] = [];
   const values: number[] = [];
 
   termFreq.forEach((freq, token) => {
-    // Simple hash function for token -> index
     let hash = 0;
     for (let i = 0; i < token.length; i++) {
       hash = ((hash << 5) - hash + token.charCodeAt(i)) | 0;
     }
-    // Keep index positive and within reasonable range
     const index = Math.abs(hash) % 30000;
-
-    // BM25-style TF score (simplified)
     const tf = freq / (freq + 1.2);
-
     indices.push(index);
     values.push(tf);
   });
@@ -97,9 +90,9 @@ export function generateBM25Sparse(text: string): { indices: number[]; values: n
   return { indices, values };
 }
 
-// Export configuration for collection creation
+// Export configuration
 export const EMBEDDING_CONFIG = {
   model: EMBEDDING_MODEL,
   dimensions: EMBEDDING_DIMENSIONS,
-  provider: "openai",
+  provider: "cohere",
 };
