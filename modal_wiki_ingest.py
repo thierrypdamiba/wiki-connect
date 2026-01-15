@@ -232,8 +232,7 @@ def embed_fastembed(texts: List[str], model: str, embedder=None) -> List[List[fl
     timeout=3600 * 4,  # 4 hours
     secrets=[
         modal.Secret.from_name("qdrant"),
-        modal.Secret.from_name("openai", required_keys=["OPENAI_API_KEY"]),
-        modal.Secret.from_name("cohere", required_keys=["COHERE_API_KEY"]),
+        modal.Secret.from_name("openai"),
     ],
     cpu=4,
     memory=8192,
