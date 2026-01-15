@@ -59,6 +59,7 @@ export default function Home() {
   const [streamedContent, setStreamedContent] = useState("");
   const [isCached, setIsCached] = useState(false);
   const [showDecisions, setShowDecisions] = useState(true);
+  const [debugError, setDebugError] = useState<string | null>(null);
   const stepsRef = useRef<HTMLDivElement>(null);
   const articleReceivedRef = useRef(false);
   const articleReceivedTimeRef = useRef(0);
@@ -98,6 +99,7 @@ export default function Home() {
     setAgentDecisions([]);
     setStreamedContent("");
     setIsCached(false);
+    setDebugError(null);
     articleReceivedRef.current = false;
 
     try {
@@ -186,9 +188,14 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Streaming error:", error);
-      updateStep("error", "error", "Failed to generate article", "Check console for details");
+      const errMsg = error instanceof Error ? error.message : String(error);
+      setDebugError(`Stream error: ${errMsg}`);
+      updateStep("error", "error", "Failed to generate article", errMsg);
     } finally {
       console.log("Finally block - isGenerating=false, articleReceivedRef=", articleReceivedRef.current);
+      if (!articleReceivedRef.current) {
+        setDebugError(prev => prev || "Stream ended but no article received");
+      }
       setIsGenerating(false);
     }
   };
@@ -298,6 +305,19 @@ export default function Home() {
       </header>
 
       <div className="max-w-6xl mx-auto px-6">
+        {/* Debug Error */}
+        {debugError && (
+          <div className="my-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-700 font-medium">Debug: {debugError}</p>
+            <button
+              onClick={() => setDebugError(null)}
+              className="mt-2 text-sm text-red-500 underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {/* Hero */}
         {!article && !isGenerating && (
           <div className="py-20 max-w-2xl">
