@@ -187,6 +187,7 @@ export default function Home() {
                   break;
                 case "error":
                   updateStep("error", "error", data.message, data.detail);
+                  setDebugError(`Server error: ${data.message} ${data.detail || ""}`);
                   break;
               }
             } catch (e) {
